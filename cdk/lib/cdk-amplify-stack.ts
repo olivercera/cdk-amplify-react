@@ -1,6 +1,5 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as amplify from "aws-cdk-lib/aws-amplify";
 import * as sm from "aws-cdk-lib/aws-secretsmanager";
 
