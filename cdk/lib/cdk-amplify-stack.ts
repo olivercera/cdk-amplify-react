@@ -12,70 +12,89 @@ export class CdkAmplifyStack extends cdk.Stack {
       secretCompleteArn: process.env["MRG_GITHUB_SECRET_ARN"],
     });
 
-    const app = new amplify.CfnApp(this, "MyAmplifyApp", {
+    const app = new amplify.CfnApp(this, "AmplifyApp", {
       name: (process?.env["MRG_PROJECT_NAME"] || "gretkzy-admin") + "-amplify",
       repository: process.env["MRG_GITHUB_REPO"],
       accessToken: secret.secretValueFromJson("orgGithubToken").unsafeUnwrap(),
+      environmentVariables: [
+        {
+          name: "REACT_APP_OKTA_ISSUER",
+          value: process.env["REACT_APP_OKTA_ISSUER"] || "TBD",
+        },
+        {
+          name: "REACT_APP_OKTA_CLIENT_ID",
+          value: process.env["REACT_APP_OKTA_CLIENT_ID"] || "TBD",
+        },
+      ],
+      customRules: [
+        {
+          source: "/<*>",
+          target: "/index.html",
+          status: "404-200",
+        },
+        {
+          source:
+            "</^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>",
+          target: "/index.html",
+          status: "200",
+        },
+      ],
     });
 
-    // const branchProd = new amplify.CfnBranch(this, "prod", {
-    //   appId: app.attrAppId,
-    //   branchName: "main",
-    //   stage: "PRODUCTION",
-    // });
+    const branchProd = new amplify.CfnBranch(this, "prod", {
+      appId: app.attrAppId,
+      branchName: "main",
+      stage: "PRODUCTION",
+      environmentVariables: [
+        {
+          name: "REACT_APP_OKTA_DEV_MODE",
+          value: "true",
+        },
+      ],
+    });
 
-    // const branchStaging = new amplify.CfnBranch(this, "staging", {
-    //   appId: app.attrAppId,
-    //   branchName: "staging",
-    //   stage: "STAGING",
-    // });
+    const branchStaging = new amplify.CfnBranch(this, "staging", {
+      appId: app.attrAppId,
+      branchName: "staging",
+      stage: "DEVELOPMENT",
+      environmentVariables: [
+        {
+          name: "REACT_APP_OKTA_DEV_MODE",
+          value: "false",
+        },
+      ],
+    });
 
     const branchDevelopment = new amplify.CfnBranch(this, "dev", {
       appId: app.attrAppId,
       branchName: "development",
       stage: "DEVELOPMENT",
+      environmentVariables: [
+        {
+          name: "REACT_APP_OKTA_DEV_MODE",
+          value: "false",
+        },
+      ],
     });
 
-    // const cfnBranch = new amplify.CfnBranch(this, "MyCfnBranch", {
-    //   appId: app.attrAppId,
-    //   branchName: "main",
+    const cfnDomain = new amplify.CfnDomain(this, "prod-domain", {
+      appId: app.attrAppId,
+      domainName: process.env["MRG_PROD_DOMAIN"] || "",
 
-    //   buildSpec: "buildSpec",
-    //   description: "description",
-    //   enableAutoBuild: false,
-    //   enablePerformanceMode: false,
-    //   enablePullRequestPreview: false,
-    //   environmentVariables: [
-    //     {
-    //       name: "name",
-    //       value: "value",
-    //     },
-    //   ],
-    //   framework: "framework",
-    //   pullRequestEnvironmentName: "pr-env",
-    //   stage: "stage",
-    //   tags: [
-    //     {
-    //       key: "key",
-    //       value: "value",
-    //     },
-    //   ],
-    // });
-
-    // const cfnDomain = new amplify.CfnDomain(this, "MyCfnDomain", {
-    //   appId: "appId",
-    //   domainName: "domainName",
-    //   subDomainSettings: [
-    //     {
-    //       branchName: "branchName",
-    //       prefix: "prefix",
-    //     },
-    //   ],
-
-    //   // the properties below are optional
-    //   autoSubDomainCreationPatterns: ["autoSubDomainCreationPatterns"],
-    //   autoSubDomainIamRole: "autoSubDomainIamRole",
-    //   enableAutoSubDomain: false,
-    // });
+      subDomainSettings: [
+        {
+          branchName: branchProd.branchName,
+          prefix: "",
+        },
+        {
+          branchName: branchStaging.branchName,
+          prefix: process.env["MRG_TESTING_SUBDOMAIN"] || "",
+        },
+        {
+          branchName: branchDevelopment.branchName,
+          prefix: process.env["MRG_DEV_SUBDOMAIN"] || "",
+        },
+      ],
+    });
   }
 }
