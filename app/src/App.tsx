@@ -19,7 +19,7 @@ import { EventsPage } from "./pages/EventsPage/EventsPage";
 import { ReportsPage } from "./pages/ReportsPage/ReportsPage";
 
 const oktaAuth = new OktaAuth({
-  issuer: process.env.REACT_APP_OKTA_DOMAIN + "/oauth2/aus85ugz1xYPXYka95d7",
+  issuer: process.env.REACT_APP_OKTA_ISSUER,
   clientId: process.env.REACT_APP_OKTA_CLIENT_ID,
   redirectUri: window.location.origin + "/login/callback",
   scopes: ["openid", "email", "profile", "offline_access", "permissions"],
